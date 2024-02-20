@@ -15,17 +15,31 @@ int main(int argv, char *argc[]){
   // Open the file
   ifstream file(argc[1]);
 
-  // Check if the file is successfully opened
+  // Check if the file is open
   if (!file.is_open()) {
       cerr << "Error opening file: " << argc[1] << endl;
       return 1;
   }
 
-    // Read and parse the file line by line
+    // Parse line
     string line;
     while (getline(file, line)) {
-        // Process each line as needed
-       cout << "Line: " << line << endl;
+      size_t p1 = line.find("\"");
+      if(p1 == string::npos){
+        cerr << "invalid input, no string detected\n";
+	return 1;
+      }
+      size_t p2 = line.rfind("\"");
+      if(p2 == string::npos || p1 == p2){
+	cerr << "invalid input, string not formatted properly\n";
+	return 1;
+      }
+
+      string input = line.substr(p1, p2-p1+1);
+      string temp = line.substr(p2+1);
+      int num = stoi(temp);
+      
+      cout << num << endl;
     }
 
     // Close the file

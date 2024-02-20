@@ -2,15 +2,18 @@ TARGET = standard
 CC = g++
 CFLAGS = -Wall -Wextra -pedantic
 LINES = 100
+SRC = $(TARGET).cpp
+GEN_SRC = assignment_2_gen.cc
 
 all: $(TARGET)
 
-$(TARGET):
-	$(CC) $(CFLAGS) $@.cpp -o $(TARGET)
+$(TARGET): $(SRC)
+	$(CC) $(CFLAGS) -c $^ -o $@.o
+	$(CC) $@.o -o $@
 
 test:
-	$(CC) assignment_2_gen.cc -o generate
-	./generate $(LINES) > test_$(LINES).txt	
+	$(CC) $(GEN_SRC) -o generate
+	./generate $(LINES) > test_$(LINES).txt
 
 clean:
-	rm -rf *.txt $(TARGET) generate
+	rm -rf *.txt $(TARGET) generate *.o
