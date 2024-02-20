@@ -21,29 +21,46 @@ int main(int argv, char *argc[]){
       return 1;
   }
 
-    // Parse line
-    string line;
-    while (getline(file, line)) {
-      size_t p1 = line.find("\"");
-      if(p1 == string::npos){
-        cerr << "invalid input, no string detected\n";
-	return 1;
-      }
-      size_t p2 = line.rfind("\"");
-      if(p2 == string::npos || p1 == p2){
-	cerr << "invalid input, string not formatted properly\n";
-	return 1;
-      }
-
-      string input = line.substr(p1, p2-p1+1);
-      string temp = line.substr(p2+1);
-      int num = stoi(temp);
-      
-      cout << num << endl;
+  // Parse line
+  int counter = 0;
+  string line;
+  while (getline(file, line)) {
+    size_t p1 = line.find("\"");
+    if(p1 == string::npos){
+      cerr << "Error at line " << counter << "." << endl;
+      return 1;
+    }
+    size_t p2 = line.rfind("\"");
+    if(p2 == string::npos || p1 == p2){
+      cerr << "Error at line " << counter << "." << endl;
+      return 1;
     }
 
-    // Close the file
-    file.close();
+    string input = line.substr(p1, p2-p1+1);
+    string temp = line.substr(p2+1);
 
-    return 0;
+    unsigned int num = stoi(temp);
+    unsigned int max = mmap[input];
+    if(max < num){
+      mmap[input] = num;
+    }
+    counter++;
+  }
+
+  // Close the file
+  file.close();
+
+  ofstream outfile(argc[2]);
+
+  if(outfile.is_open()){
+    map<string, unsigned int>::iterator itr;
+    for(itr = mmap.begin(); itr != mmap.end(); itr++){
+      outfile << itr->first << " " << itr->second << endl;
+    }
+    outfile.close();
+  } else {
+    cerr << "Unable to create output file\n";
+  }
+
+  return 0;
 }
