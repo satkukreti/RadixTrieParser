@@ -50,7 +50,7 @@ int main(int argv, char *argc[]){
     size_t errcheck = line.find("\\", p1+1);
     while(errcheck != string::npos && errcheck < p2){
       if(line[errcheck+1] != '\"' && line[errcheck+1] != '\\'){
-        cerr << "Bruh err " << counter << "." << endl;
+        cerr << "Error at line " << counter << "." << endl;
         return 1;
       }
       errcheck = line.find("\\", errcheck+2);
