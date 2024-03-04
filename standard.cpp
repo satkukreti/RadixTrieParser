@@ -8,8 +8,8 @@ using namespace std;
 map<string, unsigned int> mmap;
 
 int main(int argv, char *argc[]){
-  if(argv != 3){
-    cerr << "standard <inputFile> <outputFile>\n";
+  if(argv != 2){
+    cerr << "standard <inputFile>\n";
     return 1;
   }
   // Open the file
@@ -50,7 +50,10 @@ int main(int argv, char *argc[]){
   // Close the file
   file.close();
 
-  ofstream outfile(argc[2]);
+  string temp = argc[1];
+  size_t p3 = temp.find(".txt");
+  string toopen = temp.substr(0, p3) + "-result.txt";
+  ofstream outfile(toopen);
 
   if(outfile.is_open()){
     map<string, unsigned int>::iterator itr;
