@@ -22,18 +22,38 @@ int main(int argv, char *argc[]){
   }
 
   // Parse line
-  int counter = 0;
+  int counter = 1;
   string line;
   while (getline(file, line)) {
     size_t p1 = line.find("\"");
+    if(p1 != 0){
+      if(line[p1-1] == '\\'){
+        cerr << "Error at line " << counter << "." << endl;
+        return 1;
+      }
+    }
     if(p1 == string::npos){
       cerr << "Error at line " << counter << "." << endl;
       return 1;
     }
+
     size_t p2 = line.rfind("\"");
+    if(line[p2-1] == '\\'){
+      cerr << "Error at line " << counter << "." << endl;
+      return 1;
+    }
     if(p2 == string::npos || p1 == p2){
       cerr << "Error at line " << counter << "." << endl;
       return 1;
+    }
+
+    size_t errcheck = line.find("\\", p1+1);
+    while(errcheck != string::npos && errcheck < p2){
+      if(line[errcheck+1] != '\"' && line[errcheck+1] != '\\'){
+        cerr << "Bruh err " << counter << "." << endl;
+        return 1;
+      }
+      errcheck = line.find("\\", errcheck+2);
     }
 
     string input = line.substr(p1, p2-p1+1);
@@ -58,7 +78,10 @@ int main(int argv, char *argc[]){
   if(outfile.is_open()){
     map<string, unsigned int>::iterator itr;
     for(itr = mmap.begin(); itr != mmap.end(); itr++){
-      outfile << itr->first << " " << itr->second << endl;
+      outfile << itr->first << " " << itr->second;
+      if (next(itr) != mmap.end()) {
+            outfile << endl;
+        }
     }
     outfile.close();
   } else {
