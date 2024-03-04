@@ -38,7 +38,7 @@ int main(int argv, char *argc[]){
     }
 
     size_t p2 = line.rfind("\"");
-    if(line[p2-1] == '\\'){
+    if(line[p2-1] == '\\' && line[p2-2] != '\\'){
       cerr << "Error at line " << counter << "." << endl;
       return 1;
     }
