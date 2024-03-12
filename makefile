@@ -2,12 +2,12 @@ TARGET = standard
 TARGET2 = optimized
 CC = g++
 CFLAGS = -Wall -Wextra -pedantic
-LINES = 100
+LINES = 1000000
 SRC = $(TARGET).cpp
 SRC2 = $(TARGET2).cpp
 GEN_SRC = assignment_2_gen.cc
 
-all: $(TARGET2)
+all: $(TARGET) $(TARGET2)
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) -c $^ -o $@.o
