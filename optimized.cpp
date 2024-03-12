@@ -12,10 +12,7 @@ vector<string> vstring;
 
 enum state {
     STRING,
-    NUM,
-    NLINE,
-    DONE,
-    ERROR
+    NUM
 };
 
 bool canPrint(char c){
@@ -36,7 +33,11 @@ bool nline(char c){
 
 bool parseFile(const char* str, size_t size){
     state state = STRING;
-    int counter = 0;
+    int counter = 1;
+
+    bool strstart = false;
+    bool bslash = false;
+    bool hasnum = false;
 
     string temp = "";
 
@@ -48,26 +49,78 @@ bool parseFile(const char* str, size_t size){
                 if(wspace(cchar)){
 
                 } else if(nline(cchar)){
+                    if(strstart && !hasnum){
+                        cerr << "Error at line " << counter << "\n";
+                        return false;
+                    }
                     counter++;
-                    vstring.push_back(temp);
-                    temp = "";
                 } else if(canPrint(cchar)){
-                    state = STRING;
+                    if(bslash){
+                        if(cchar == '\"' || cchar == '\\'){
+                            bslash = false;
+                            temp += cchar;
+                            break;
+                        } else {
+                            cerr << "Error at line " << counter << "\n";
+                            return false;
+                        }
+                    }
+
+                    if(!strstart){
+                        if(cchar == '\"'){
+                            strstart = true;
+                            temp += cchar;
+                            break;
+                        } else {
+                            cerr << "Error at line " << counter << "\n";
+                            return false;
+                        }
+                    } else {
+                        if(cchar == '\"'){
+                            strstart = false;
+                            hasnum = true;
+                            temp += cchar;
+                            state = NUM;
+                            break;
+                        }
+                    }
+
+                    if(cchar == '\\'){
+                        bslash = true;
+                        temp += cchar;
+                        break;
+                    }
+
                     temp += cchar;
                 } else {
-                    state = ERROR;
+                    cout << "Error at line " << counter << "\n";
+                    return false;
                 }
                 break;
 
-            case ERROR:
-                return false;
-            
+            case NUM:
+                if(wspace(cchar)){
+
+                } else if(nline(cchar)){
+                    hasnum = false;
+                    state = STRING;
+                    counter++;
+                    vstring.push_back(temp);
+                    temp = "";
+                } else if(isNum(cchar)){
+                    temp += cchar;
+                } else {
+                    return false;
+                }
+
             default:
                 break;
         }
     }
 
-    return state == DONE || state == STRING;
+    cout << counter << endl;
+
+    return true;
 }
 
 int main(int argc, char* argv[]) {
@@ -107,7 +160,7 @@ int main(int argc, char* argv[]) {
             cout << s << "\n";
         }
     } else {
-        cout << "error\n";
+
     }
 
     // Unmap the file from memory
