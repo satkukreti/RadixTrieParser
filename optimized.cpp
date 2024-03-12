@@ -93,7 +93,7 @@ bool parseFile(const char* str, size_t size){
 
                     temp += cchar;
                 } else {
-                    cout << "Error at line " << counter << "\n";
+                    cerr << "Error at line " << counter << "\n";
                     return false;
                 }
                 break;
@@ -109,7 +109,10 @@ bool parseFile(const char* str, size_t size){
                     temp = "";
                 } else if(isNum(cchar)){
                     temp += cchar;
+                } else if(cchar == '-'){
+                    temp += cchar;
                 } else {
+                    cerr << "Error at line " << counter << "\n";
                     return false;
                 }
 
