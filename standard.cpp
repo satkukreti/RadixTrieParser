@@ -7,6 +7,18 @@ using namespace std;
 
 map<string, unsigned int> mmap;
 
+bool canPrint(char c){
+    return c >= 32 && c <= 126;
+}
+
+bool isNum(char c){
+    return c >= '0' && c <= '9';
+}
+
+bool wspace(char c){
+    return c == ' ' || c == '\t';
+}
+
 int main(int argv, char *argc[]){
   if(argv != 2){
     cerr << "standard <inputFile>\n";
@@ -27,9 +39,11 @@ int main(int argv, char *argc[]){
   while (getline(file, line)) {
     size_t p1 = line.find("\"");
     if(p1 != 0){
-      if(line[p1-1] == '\\'){
-        cerr << "Error at line " << counter << "." << endl;
-        return 1;
+      for(size_t i = 0; i < p1; i++){
+        if(!wspace(line[i])){
+          cerr << "Error at line " << counter << "." << endl;
+          return 1;
+        }
       }
     }
     if(p1 == string::npos){
@@ -38,31 +52,58 @@ int main(int argv, char *argc[]){
     }
 
     size_t p2 = line.rfind("\"");
-    if(line[p2-1] == '\\' && line[p2-2] != '\\'){
-      cerr << "Error at line " << counter << "." << endl;
-      return 1;
-    }
     if(p2 == string::npos || p1 == p2){
       cerr << "Error at line " << counter << "." << endl;
       return 1;
     }
 
-    size_t errcheck = line.find("\\", p1+1);
-    while(errcheck != string::npos && errcheck < p2){
-      if(line[errcheck+1] != '\"' && line[errcheck+1] != '\\'){
+    string name;
+    string temp;
+
+    for(size_t i = p1+1; i < p2; i++){
+      char cchar = line[i];
+
+      if (cchar == '\\') {
+        if (i + 1 < p2) {
+            char nchar = line[i + 1];
+            if (nchar == '\\' || nchar == '"') {
+                name += nchar;
+                i++;
+            } else {
+              cerr << "Error at line " << counter << "." << endl;
+              return 1;
+            }
+        } else {
+            cerr << "Error at line " << counter << "." << endl;
+            return 1;
+        }
+      } else if (canPrint(cchar)) {
+          name += cchar;
+      } else {
         cerr << "Error at line " << counter << "." << endl;
         return 1;
       }
-      errcheck = line.find("\\", errcheck+2);
     }
 
-    string input = line.substr(p1, p2-p1+1);
-    string temp = line.substr(p2+1);
+    bool noNum = true;
+    for(size_t i = p2+1; i < line.size(); i++){
+      char cchar = line[i];
+      
+      if(wspace(cchar) && noNum){
+
+      } else if(isNum(cchar)){
+        temp += cchar;
+        noNum = false;
+      } else {
+        cerr << "Error at line " << counter << "." << endl;
+        return 1;
+      }
+    }
 
     unsigned int num = stoi(temp);
-    unsigned int max = mmap[input];
+    unsigned int max = mmap[name];
     if(max < num){
-      mmap[input] = num;
+      mmap[name] = num;
     }
     counter++;
   }

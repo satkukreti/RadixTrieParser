@@ -36,8 +36,10 @@ bool parseFile(const char* str, size_t size){
     int counter = 1;
 
     bool strstart = false;
+    bool numstart = false;
     bool bslash = false;
     bool hasnum = false;
+
 
     string temp = "";
 
@@ -47,7 +49,9 @@ bool parseFile(const char* str, size_t size){
         switch(state){
             case STRING:
                 if(wspace(cchar)){
-
+                    if(strstart){
+                        temp += cchar;
+                    }
                 } else if(nline(cchar)){
                     if(strstart && !hasnum){
                         cerr << "Error at line " << counter << "\n";
@@ -100,14 +104,19 @@ bool parseFile(const char* str, size_t size){
 
             case NUM:
                 if(wspace(cchar)){
-
+                    if(numstart){
+                        cerr << "Error at line " << counter << "\n";
+                        return false;
+                    }
                 } else if(nline(cchar)){
                     hasnum = false;
+                    numstart = false;
                     state = STRING;
                     counter++;
                     vstring.push_back(temp);
                     temp = "";
                 } else if(isNum(cchar)){
+                    numstart = true;
                     temp += cchar;
                 } else if(cchar == '-'){
                     temp += cchar;
@@ -120,8 +129,6 @@ bool parseFile(const char* str, size_t size){
                 break;
         }
     }
-
-    cout << counter << endl;
 
     return true;
 }
