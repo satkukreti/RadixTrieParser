@@ -8,7 +8,68 @@
 
 using namespace std;
 
-vector<string> vstring;
+const int ALPHABET_SIZE = 95;
+const int MAX_NODES = 10000;
+
+class TrieNode {
+public:
+    int children[ALPHABET_SIZE];
+    bool end;
+
+    TrieNode() : end(false) {
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            children[i] = -1;
+        }
+    }
+};
+
+class Trie {
+    private:
+        TrieNode nodes[MAX_NODES];
+        int nCount;
+        int nextNode;
+    
+    public:
+        Trie() : nCount(1), nextNode(1) {}
+
+        void insert(string str){
+            int current = 0;
+
+            for (char c : str) {
+                int idx = c - 32;
+                if (nodes[current].children[idx] == -1) {
+                    nodes[current].children[idx] = nextNode++;
+                }
+
+                current = nodes[current].children[idx];
+            }
+
+            nodes[current].end = true;
+        }
+
+        bool search(string str){
+            int current = 0;
+
+            for (char c : str) {
+                int idx = c - 32;
+                if (nodes[current].children[idx] == -1) {
+                    return false;
+                }
+
+                current = nodes[current].children[idx];
+            }
+
+            return (current != -1 && nodes[current].end);
+        }
+
+        /*void print(){
+            int current = 0;
+
+            for(int i = 0; )
+        }*/
+};
+
+Trie trie;
 
 enum state {
     STRING,
@@ -113,7 +174,7 @@ bool parseFile(const char* str, size_t size){
                     numstart = false;
                     state = STRING;
                     counter++;
-                    vstring.push_back(temp);
+                    trie.insert(temp);
                     temp = "";
                 } else if(isNum(cchar)){
                     numstart = true;
@@ -166,9 +227,7 @@ int main(int argc, char* argv[]) {
     close(fd);
 
     if(parseFile(filemem, sb.st_size)){
-        for(string s: vstring){
-            cout << s << "\n";
-        }
+        cout << "Worked" << endl;
     } else {
 
     }
