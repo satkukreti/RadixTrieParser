@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
+#include <climits>
 
 using namespace std;
 
@@ -15,8 +16,9 @@ class TrieNode {
 public:
     int children[ALPHABET_SIZE];
     bool end;
+    int value;
 
-    TrieNode() : end(false) {
+    TrieNode() : end(false), value(INT_MIN){
         for (int i = 0; i < ALPHABET_SIZE; i++) {
             children[i] = -1;
         }
@@ -32,7 +34,7 @@ class Trie {
     public:
         Trie() : nCount(1), nextNode(1) {}
 
-        void insert(string str){
+        void insert(string str, int value){
             int current = 0;
 
             for (char c : str) {
@@ -45,6 +47,8 @@ class Trie {
             }
 
             nodes[current].end = true;
+            if(value > nodes[current].value)
+                nodes[current].value = value;
         }
 
         bool search(string str){
@@ -67,7 +71,7 @@ class Trie {
                 for (char c : cword) {
                     cout << c;
                 }
-                cout << endl;
+                cout << " " << nodes[nodeIndex].value << endl;
             }
 
             for (int i = 0; i < ALPHABET_SIZE; ++i) {
@@ -119,6 +123,7 @@ bool parseFile(const char* str, size_t size){
 
 
     string temp = "";
+    string tnum = "";
 
     for(size_t i = 0; i < size; i++){
         char cchar = str[i];
@@ -159,7 +164,6 @@ bool parseFile(const char* str, size_t size){
                         if(cchar == '\"'){
                             strstart = false;
                             hasnum = true;
-                            trie.insert(temp);
                             state = NUM;
                             break;
                         }
@@ -188,13 +192,20 @@ bool parseFile(const char* str, size_t size){
                     numstart = false;
                     state = STRING;
                     counter++;
-                    //trie.insert(temp);
+
+                    int i = 0;
+                    for(char c : tnum) {
+                        i = i * 10 + (c - '0');
+                    }
+                    
+                    trie.insert(temp, i);
                     temp = "";
+                    tnum = "";
                 } else if(isNum(cchar)){
                     numstart = true;
-                    temp += cchar;
+                    tnum += cchar;
                 } else if(cchar == '-'){
-                    temp += cchar;
+                    tnum += cchar;
                 } else {
                     cerr << "Error at line " << counter << "\n";
                     return false;
