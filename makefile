@@ -1,7 +1,7 @@
 TARGET = standard
 TARGET2 = optimized
 CC = g++
-CFLAGS = -O3 -Wall -Wextra -pedantic
+CFLAGS = -g -Wall -Wextra -pedantic
 LINES = 10000000
 SRC = $(TARGET).cpp
 SRC2 = $(TARGET2).cpp

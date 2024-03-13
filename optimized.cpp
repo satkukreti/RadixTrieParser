@@ -107,22 +107,6 @@ enum state {
     NUM
 };
 
-bool canPrint(char c){
-    return c >= 32 && c <= 126;
-}
-
-bool isNum(char c){
-    return c >= '0' && c <= '9';
-}
-
-bool wspace(char c){
-    return c == ' ' || c == '\t';
-}
-
-bool nline(char c){
-    return c == '\n';
-}
-
 void parseFile(const char* str, size_t size){
     state state = STRING;
     int counter = 1;
@@ -132,30 +116,31 @@ void parseFile(const char* str, size_t size){
     bool bslash = false;
     bool hasnum = false;
 
-
-    string temp = "";
-    string tnum = "";
+    char temp[21];
+    char tnum[15];
+    int tempIndex = 0;
+    int tnumIndex = 0;
 
     for(size_t i = 0; i < size; i++){
         char cchar = str[i];
 
         switch(state){
             case STRING:
-                if(wspace(cchar)){
+                if(cchar == ' ' || cchar == '\t'){
                     if(strstart){
-                        temp += cchar;
+                        temp[tempIndex++] = cchar;
                     }
-                } else if(nline(cchar)){
+                } else if(cchar == '\n'){
                     if(strstart && !hasnum){
                         cerr << "Error at line " << counter << "\n";
                         return;
                     }
                     counter++;
-                } else if(canPrint(cchar)){
+                } else if(cchar >= 32 && cchar <= 126){
                     if(bslash){
                         if(cchar == '\"' || cchar == '\\'){
                             bslash = false;
-                            temp += cchar;
+                            temp[tempIndex++] = cchar;
                             break;
                         } else {
                             cerr << "Error at line " << counter << "\n";
@@ -176,6 +161,7 @@ void parseFile(const char* str, size_t size){
                             strstart = false;
                             hasnum = true;
                             state = NUM;
+                            temp[tempIndex] = '\0';
                             break;
                         }
                     }
@@ -185,7 +171,7 @@ void parseFile(const char* str, size_t size){
                         break;
                     }
 
-                    temp += cchar;
+                    temp[tempIndex++] = cchar;
                 } else {
                     cerr << "Error at line " << counter << "\n";
                     return;
@@ -193,34 +179,32 @@ void parseFile(const char* str, size_t size){
                 break;
 
             case NUM:
-                if(wspace(cchar)){
+                if(cchar == ' ' || cchar == '\t'){
                     if(numstart){
                         cerr << "Error at line " << counter << "\n";
                         return;
                     }
-                } else if(nline(cchar)){
+                } else if(cchar == '\n'){
                     hasnum = false;
                     numstart = false;
                     state = STRING;
                     counter++;
 
-                    int i = 0;
-                    for(char c : tnum) {
-                        i = i * 10 + (c - '0');
-                    }
+                    tnum[tnumIndex] = '\0';
+                    int i = stoi(tnum);
 
                     trie.insert(temp, i);
-                    temp = "";
-                    tnum = "";
-                } else if(isNum(cchar)){
-                    numstart = true;
-                    tnum += cchar;
-                } else if(cchar == '-'){
-                    tnum += cchar;
+                    tempIndex = 0;
+                    tnumIndex = 0;
+                } else if((cchar >= '0' && cchar <= '9') ||cchar == '-'){
+                    if(!numstart)
+                        numstart = true;
+                    tnum[tnumIndex++] = cchar;
                 } else {
                     cerr << "Error at line " << counter << "\n";
                     return;
                 }
+                break;
 
             default:
                 break;
