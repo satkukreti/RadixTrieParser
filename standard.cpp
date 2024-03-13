@@ -2,6 +2,8 @@
 #include <iostream>
 #include <map>
 #include <fstream>
+#include <chrono>
+#include <unistd.h>
 
 using namespace std;
 
@@ -19,19 +21,21 @@ bool wspace(char c){
     return c == ' ' || c == '\t';
 }
 
-int main(int argv, char *argc[]){
-  if(argv != 2){
+int main(int argc, char *argv[]){
+  if(argc != 2){
     cerr << "standard <inputFile>\n";
     return 1;
   }
   // Open the file
-  ifstream file(argc[1]);
+  ifstream file(argv[1]);
 
   // Check if the file is open
   if (!file.is_open()) {
-      cerr << "Error opening file: " << argc[1] << endl;
+      cerr << "Error opening file: " << argv[1] << endl;
       return 1;
   }
+
+  auto start_tp = chrono::steady_clock::now();
 
   // Parse line
   int counter = 1;
@@ -111,7 +115,12 @@ int main(int argv, char *argc[]){
   // Close the file
   file.close();
 
-  string temp = argc[1];
+  auto stop_tp = chrono::steady_clock::now();
+  auto duration = chrono::duration<double>(stop_tp - start_tp);
+
+  cout << "Elapsed time: " << duration.count() << endl;
+
+  string temp = argv[1];
   size_t p3 = temp.find(".txt");
   string toopen = temp.substr(0, p3) + "-result.txt";
   ofstream outfile(toopen);

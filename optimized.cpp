@@ -1,4 +1,6 @@
 #include <cstring>
+#include <fstream>
+#include <fstream>
 #include <iostream>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -6,11 +8,12 @@
 #include <unistd.h>
 #include <vector>
 #include <climits>
+#include <chrono>
 
 using namespace std;
 
 const int ALPHABET_SIZE = 95;
-const int MAX_NODES = 10000;
+const int MAX_NODES = 200000;
 
 class TrieNode {
 public:
@@ -66,26 +69,34 @@ class Trie {
             return (current != -1 && nodes[current].end);
         }
 
-        void printhelp(int nodeIndex, vector<char>& cword) {
+        void printhelp(int nodeIndex, vector<char>& cword, ofstream& outFile) {
             if (nodes[nodeIndex].end) {
                 for (char c : cword) {
-                    cout << c;
+                    outFile << c;
                 }
-                cout << " " << nodes[nodeIndex].value << endl;
+                outFile << " " << nodes[nodeIndex].value << "\n";
             }
 
             for (int i = 0; i < ALPHABET_SIZE; ++i) {
                 if (nodes[nodeIndex].children[i] != -1) {
                     cword.push_back(static_cast<char>(i + 32));
-                    printhelp(nodes[nodeIndex].children[i], cword);
+                    printhelp(nodes[nodeIndex].children[i], cword, outFile);
                     cword.pop_back();
                 }
             }
         }
 
-        void print() {
+        void print(const string& filename) {
+            ofstream outFile(filename);
+            if (!outFile.is_open()) {
+                cerr << "Error opening file " << filename << "\n";
+                return;
+            }
+
             vector<char> cword;
-            printhelp(0, cword);
+            printhelp(0, cword, outFile);
+
+            outFile.close();
         }
 };
 
@@ -112,7 +123,7 @@ bool nline(char c){
     return c == '\n';
 }
 
-bool parseFile(const char* str, size_t size){
+void parseFile(const char* str, size_t size){
     state state = STRING;
     int counter = 1;
 
@@ -137,7 +148,7 @@ bool parseFile(const char* str, size_t size){
                 } else if(nline(cchar)){
                     if(strstart && !hasnum){
                         cerr << "Error at line " << counter << "\n";
-                        return false;
+                        return;
                     }
                     counter++;
                 } else if(canPrint(cchar)){
@@ -148,7 +159,7 @@ bool parseFile(const char* str, size_t size){
                             break;
                         } else {
                             cerr << "Error at line " << counter << "\n";
-                            return false;
+                            return;
                         }
                     }
 
@@ -158,7 +169,7 @@ bool parseFile(const char* str, size_t size){
                             break;
                         } else {
                             cerr << "Error at line " << counter << "\n";
-                            return false;
+                            return;
                         }
                     } else {
                         if(cchar == '\"'){
@@ -177,7 +188,7 @@ bool parseFile(const char* str, size_t size){
                     temp += cchar;
                 } else {
                     cerr << "Error at line " << counter << "\n";
-                    return false;
+                    return;
                 }
                 break;
 
@@ -185,7 +196,7 @@ bool parseFile(const char* str, size_t size){
                 if(wspace(cchar)){
                     if(numstart){
                         cerr << "Error at line " << counter << "\n";
-                        return false;
+                        return;
                     }
                 } else if(nline(cchar)){
                     hasnum = false;
@@ -197,7 +208,7 @@ bool parseFile(const char* str, size_t size){
                     for(char c : tnum) {
                         i = i * 10 + (c - '0');
                     }
-                    
+
                     trie.insert(temp, i);
                     temp = "";
                     tnum = "";
@@ -208,7 +219,7 @@ bool parseFile(const char* str, size_t size){
                     tnum += cchar;
                 } else {
                     cerr << "Error at line " << counter << "\n";
-                    return false;
+                    return;
                 }
 
             default:
@@ -216,7 +227,7 @@ bool parseFile(const char* str, size_t size){
         }
     }
 
-    return true;
+    return;
 }
 
 int main(int argc, char* argv[]) {
@@ -251,15 +262,23 @@ int main(int argc, char* argv[]) {
 
     close(fd);
 
-    if(parseFile(filemem, sb.st_size)){
-        trie.print();
-    } else {
+    auto start_tp = chrono::steady_clock::now();
 
-    }
+    parseFile(filemem, sb.st_size);
+
+    auto stop_tp = chrono::steady_clock::now();
+    auto duration = chrono::duration<double>(stop_tp - start_tp);
+
+    cout << "Elapsed time: " << duration.count() << endl;
+
+    string temp = argv[1];
+    size_t p3 = temp.find(".txt");
+    string toopen = temp.substr(0, p3) + "-result.txt";
+
+    trie.print(toopen);
 
     // Unmap the file from memory
     munmap(filemem, sb.st_size);
-    close(fd);
 
     return 0;
 }
