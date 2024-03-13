@@ -62,11 +62,27 @@ class Trie {
             return (current != -1 && nodes[current].end);
         }
 
-        /*void print(){
-            int current = 0;
+        void printhelp(int nodeIndex, vector<char>& cword) {
+            if (nodes[nodeIndex].end) {
+                for (char c : cword) {
+                    cout << c;
+                }
+                cout << endl;
+            }
 
-            for(int i = 0; )
-        }*/
+            for (int i = 0; i < ALPHABET_SIZE; ++i) {
+                if (nodes[nodeIndex].children[i] != -1) {
+                    cword.push_back(static_cast<char>(i + 32));
+                    printhelp(nodes[nodeIndex].children[i], cword);
+                    cword.pop_back();
+                }
+            }
+        }
+
+        void print() {
+            vector<char> cword;
+            printhelp(0, cword);
+        }
 };
 
 Trie trie;
@@ -134,7 +150,6 @@ bool parseFile(const char* str, size_t size){
                     if(!strstart){
                         if(cchar == '\"'){
                             strstart = true;
-                            temp += cchar;
                             break;
                         } else {
                             cerr << "Error at line " << counter << "\n";
@@ -144,7 +159,7 @@ bool parseFile(const char* str, size_t size){
                         if(cchar == '\"'){
                             strstart = false;
                             hasnum = true;
-                            temp += cchar;
+                            trie.insert(temp);
                             state = NUM;
                             break;
                         }
@@ -152,7 +167,6 @@ bool parseFile(const char* str, size_t size){
 
                     if(cchar == '\\'){
                         bslash = true;
-                        temp += cchar;
                         break;
                     }
 
@@ -174,7 +188,7 @@ bool parseFile(const char* str, size_t size){
                     numstart = false;
                     state = STRING;
                     counter++;
-                    trie.insert(temp);
+                    //trie.insert(temp);
                     temp = "";
                 } else if(isNum(cchar)){
                     numstart = true;
@@ -227,7 +241,7 @@ int main(int argc, char* argv[]) {
     close(fd);
 
     if(parseFile(filemem, sb.st_size)){
-        cout << "Worked" << endl;
+        trie.print();
     } else {
 
     }
