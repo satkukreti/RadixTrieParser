@@ -1,7 +1,7 @@
 TARGET = standard
 TARGET2 = optimized
 CC = g++
-CFLAGS = -g -Wall -Wextra -pedantic
+CFLAGS = -Wall -Wextra -pedantic
 LINES = 1000000
 SRC = $(TARGET).cpp
 SRC2 = $(TARGET2).cpp
@@ -21,8 +21,10 @@ test:
 	$(CC) $(GEN_SRC) -o generate
 	./generate $(LINES) > test_$(LINES).txt
 
+call: clean ctest
+
 clean:
 	rm -rf $(TARGET) $(TARGET2) generate *.o
 
-ctext:
+ctest:
 	rm -rf *.txt

@@ -9,7 +9,6 @@
 #include <vector>
 #include <climits>
 #include <chrono>
-#include <stack>
 
 using namespace std;
 
@@ -85,6 +84,7 @@ class Trie {
 };
 
 Trie trie;
+int counter;
 
 enum state {
     STRING,
@@ -93,7 +93,7 @@ enum state {
 
 void parseFile(const char* filemem, size_t size){
     state state = STRING;
-    int counter = 1;
+    counter = 1;
 
     bool strstart = false;
     bool numstart = false;
@@ -238,7 +238,8 @@ int main(int argc, char* argv[]) {
     auto stop_tp = chrono::steady_clock::now();
     auto duration = chrono::duration<double>(stop_tp - start_tp);
 
-    cout << "Elapsed time: " << duration.count() << endl;
+    counter--;
+    cout << "Lines per second: " << double(counter)/duration.count() << "\n";
 
     string temp = argv[1];
     size_t p3 = temp.find(".txt");
