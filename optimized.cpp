@@ -171,7 +171,16 @@ void parseFile(const char* filemem, size_t size){
                     state = STRING;
                     counter++;
                     tval[tvalIndex] = '\0';
-                    int temp = stoi(tval);
+                    
+                    int temp = 0;
+                    int sign = 1;
+                    if(tval[0] == '-'){
+                        sign = -1;
+                    }
+                    for(int i = 0; tval[i] != '\0'; i++){
+                        temp = temp * 10 + (tval[i] - '0');
+                    }
+                    temp *= sign;
                     tvalIndex = 0;
                     trie.insert(temp);
                 } else if((cchar >= '0' && cchar <= '9') ||cchar == '-'){
