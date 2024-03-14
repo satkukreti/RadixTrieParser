@@ -128,10 +128,7 @@ int main(int argc, char *argv[]){
   if(outfile.is_open()){
     map<string, unsigned int>::iterator itr;
     for(itr = mmap.begin(); itr != mmap.end(); itr++){
-      outfile << itr->first << " " << itr->second;
-      if (next(itr) != mmap.end()) {
-            outfile << endl;
-        }
+      outfile << itr->first << " " << itr->second << endl;
     }
     outfile.close();
   } else {

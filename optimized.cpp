@@ -9,77 +9,61 @@
 #include <vector>
 #include <climits>
 #include <chrono>
+#include <stack>
 
 using namespace std;
 
 const int ALPHABET_SIZE = 95;
 const int MAX_NODES = 200000;
 
-class TrieNode {
-public:
+struct TrieNode {
     int children[ALPHABET_SIZE];
     bool end;
     int value;
-
     TrieNode() : end(false), value(INT_MIN){
-        for (int i = 0; i < ALPHABET_SIZE; i++) {
+        for(size_t i = 0; i < ALPHABET_SIZE; i++)
             children[i] = -1;
-        }
     }
 };
+
 
 class Trie {
     private:
         TrieNode nodes[MAX_NODES];
-        int nCount;
+        int current;
         int nextNode;
     
     public:
-        Trie() : nCount(1), nextNode(1) {}
+        Trie() : current(0), nextNode(1) {}
 
-        void insert(string str, int value){
-            int current = 0;
-
-            for (char c : str) {
-                int idx = c - 32;
-                if (nodes[current].children[idx] == -1) {
-                    nodes[current].children[idx] = nextNode++;
-                }
-
-                current = nodes[current].children[idx];
+        void insert(char c){
+            int index = c - 32;
+            if(nodes[current].children[index] == -1){
+                nodes[current].children[index] = nextNode++;
             }
 
+            current = nodes[current].children[index];
+        }
+
+        void insert(int value){
             nodes[current].end = true;
             if(value > nodes[current].value)
                 nodes[current].value = value;
-        }
-
-        bool search(string str){
-            int current = 0;
-
-            for (char c : str) {
-                int idx = c - 32;
-                if (nodes[current].children[idx] == -1) {
-                    return false;
-                }
-
-                current = nodes[current].children[idx];
-            }
-
-            return (current != -1 && nodes[current].end);
+            
+            current = 0;
         }
 
         void printhelp(int nodeIndex, vector<char>& cword, ofstream& outFile) {
-            if (nodes[nodeIndex].end) {
-                for (char c : cword) {
+            if(nodes[nodeIndex].end){
+                for(char c : cword){
                     outFile << c;
                 }
                 outFile << " " << nodes[nodeIndex].value << "\n";
             }
 
-            for (int i = 0; i < ALPHABET_SIZE; ++i) {
-                if (nodes[nodeIndex].children[i] != -1) {
-                    cword.push_back(static_cast<char>(i + 32));
+            for(int i = 0; i < ALPHABET_SIZE; i++){
+                if(nodes[nodeIndex].children[i] != -1){
+                    cword.push_back(char(i + 32));
                     printhelp(nodes[nodeIndex].children[i], cword, outFile);
                     cword.pop_back();
                 }
@@ -88,7 +72,7 @@ class Trie {
 
         void print(const string& filename) {
             ofstream outFile(filename);
-            if (!outFile.is_open()) {
+            if(!outFile.is_open()){
                 cerr << "Error opening file " << filename << "\n";
                 return;
             }
@@ -107,7 +91,7 @@ enum state {
     NUM
 };
 
-void parseFile(const char* str, size_t size){
+void parseFile(const char* filemem, size_t size){
     state state = STRING;
     int counter = 1;
 
@@ -116,19 +100,17 @@ void parseFile(const char* str, size_t size){
     bool bslash = false;
     bool hasnum = false;
 
-    char temp[21];
-    char tnum[15];
-    int tempIndex = 0;
-    int tnumIndex = 0;
+    char tval[15];
+    int tvalIndex = 0;
 
     for(size_t i = 0; i < size; i++){
-        char cchar = str[i];
+        char cchar = filemem[i];
 
         switch(state){
             case STRING:
                 if(cchar == ' ' || cchar == '\t'){
                     if(strstart){
-                        temp[tempIndex++] = cchar;
+                        trie.insert(cchar);
                     }
                 } else if(cchar == '\n'){
                     if(strstart && !hasnum){
@@ -140,7 +122,7 @@ void parseFile(const char* str, size_t size){
                     if(bslash){
                         if(cchar == '\"' || cchar == '\\'){
                             bslash = false;
-                            temp[tempIndex++] = cchar;
+                            trie.insert(cchar);
                             break;
                         } else {
                             cerr << "Error at line " << counter << "\n";
@@ -161,7 +143,6 @@ void parseFile(const char* str, size_t size){
                             strstart = false;
                             hasnum = true;
                             state = NUM;
-                            temp[tempIndex] = '\0';
                             break;
                         }
                     }
@@ -171,7 +152,7 @@ void parseFile(const char* str, size_t size){
                         break;
                     }
 
-                    temp[tempIndex++] = cchar;
+                    trie.insert(cchar);
                 } else {
                     cerr << "Error at line " << counter << "\n";
                     return;
@@ -189,17 +170,14 @@ void parseFile(const char* str, size_t size){
                     numstart = false;
                     state = STRING;
                     counter++;
-
-                    tnum[tnumIndex] = '\0';
-                    int i = stoi(tnum);
-
-                    trie.insert(temp, i);
-                    tempIndex = 0;
-                    tnumIndex = 0;
+                    tval[tvalIndex] = '\0';
+                    int temp = stoi(tval);
+                    tvalIndex = 0;
+                    trie.insert(temp);
                 } else if((cchar >= '0' && cchar <= '9') ||cchar == '-'){
                     if(!numstart)
                         numstart = true;
-                    tnum[tnumIndex++] = cchar;
+                    tval[tvalIndex++] = cchar;
                 } else {
                     cerr << "Error at line " << counter << "\n";
                     return;
@@ -209,6 +187,13 @@ void parseFile(const char* str, size_t size){
             default:
                 break;
         }
+    }
+
+    if(tvalIndex != 0){
+        tval[tvalIndex] = '\0';
+        int temp = stoi(tval);
+        tvalIndex = 0;
+        trie.insert(temp);
     }
 
     return;
