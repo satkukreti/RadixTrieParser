@@ -84,129 +84,62 @@ class Trie {
 };
 
 Trie trie;
-int counter;
-
-enum state {
-    STRING,
-    NUM
-};
+size_t counter;
 
 void parseFile(const char* filemem, size_t size){
-    state state = STRING;
-    counter = 1;
-
+    int value;
     bool strstart = false;
-    bool numstart = false;
     bool bslash = false;
-    bool hasnum = false;
 
-    char tval[15];
-    int tvalIndex = 0;
+    for(size_t i = 0; i < size; i++) {
+        char c = filemem[i];
 
-    for(size_t i = 0; i < size; i++){
-        char cchar = filemem[i];
+        if(c == '\n')
+            counter++;
 
-        switch(state){
-            case STRING:
-                if(cchar == ' ' || cchar == '\t'){
-                    if(strstart){
-                        trie.insert(cchar);
-                    }
-                } else if(cchar == '\n'){
-                    if(strstart && !hasnum){
-                        cerr << "Error at line " << counter << "\n";
-                        return;
-                    }
-                    counter++;
-                } else if(cchar >= 32 && cchar <= 126){
-                    if(bslash){
-                        if(cchar == '\"' || cchar == '\\'){
-                            bslash = false;
-                            trie.insert(cchar);
-                            break;
-                        } else {
-                            cerr << "Error at line " << counter << "\n";
-                            return;
-                        }
-                    }
-
-                    if(!strstart){
-                        if(cchar == '\"'){
-                            strstart = true;
-                            break;
-                        } else {
-                            cerr << "Error at line " << counter << "\n";
-                            return;
-                        }
-                    } else {
-                        if(cchar == '\"'){
-                            strstart = false;
-                            hasnum = true;
-                            state = NUM;
-                            break;
-                        }
-                    }
-
-                    if(cchar == '\\'){
-                        bslash = true;
-                        break;
-                    }
-
-                    trie.insert(cchar);
-                } else {
+        if(!strstart){
+            if(c == '\"'){
+                strstart = true;
+                bslash = false;
+            } else if(c != ' ' && c != '\t' && c != '\n'){
+                cerr << "Error at line " << counter << "\n";
+                return;
+            }
+        } else {
+            if(bslash){
+                if(c != '\\' && c != '"'){
                     cerr << "Error at line " << counter << "\n";
                     return;
                 }
-                break;
+                trie.insert(c);
+                bslash = false;
+            } else if(c == '\\'){
+                bslash = true; 
+            } else if(c == '\"'){
+                strstart = false;
+                i++;
 
-            case NUM:
-                if(cchar == ' ' || cchar == '\t'){
-                    if(numstart){
-                        cerr << "Error at line " << counter << "\n";
-                        return;
-                    }
-                } else if(cchar == '\n'){
-                    hasnum = false;
-                    numstart = false;
-                    state = STRING;
-                    counter++;
-                    tval[tvalIndex] = '\0';
-                    
-                    int temp = 0;
-                    int sign = 1;
-                    if(tval[0] == '-'){
-                        sign = -1;
-                    }
-                    for(int i = 0; tval[i] != '\0'; i++){
-                        temp = temp * 10 + (tval[i] - '0');
-                    }
-                    temp *= sign;
-                    tvalIndex = 0;
-                    trie.insert(temp);
-                } else if((cchar >= '0' && cchar <= '9') ||cchar == '-'){
-                    if(!numstart)
-                        numstart = true;
-                    tval[tvalIndex++] = cchar;
-                } else {
+                while(i < size && (filemem[i] == ' ' || filemem[i] == '\t'))
+                    i++;
+
+                value = 0;
+                if(i >= size || !(filemem[i] >= '0' && filemem[i] <= '9')){
                     cerr << "Error at line " << counter << "\n";
                     return;
                 }
-                break;
-
-            default:
-                break;
+                while(i < size && filemem[i] >= '0' && filemem[i] <= '9'){
+                    value = value * 10 + (filemem[i] - '0');
+                    i++;
+                }
+                trie.insert(value);
+                i--;
+            } else {
+                trie.insert(c);
+            }
         }
     }
-
-    if(tvalIndex != 0){
-        tval[tvalIndex] = '\0';
-        int temp = stoi(tval);
-        tvalIndex = 0;
-        trie.insert(temp);
-    }
-
-    return;
 }
+
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -247,7 +180,6 @@ int main(int argc, char* argv[]) {
     auto stop_tp = chrono::steady_clock::now();
     auto duration = chrono::duration<double>(stop_tp - start_tp);
 
-    counter--;
     cout << "Lines per second: " << double(counter)/duration.count() << "\n";
 
     string temp = argv[1];
