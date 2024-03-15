@@ -86,56 +86,68 @@ class Trie {
 Trie trie;
 size_t counter;
 
-void parseFile(const char* filemem, size_t size){
-    int value;
-    bool strstart = false;
-    bool bslash = false;
+enum State {
+    Normal,
+    StringContent,
+    Escape
+};
 
-    for(size_t i = 0; i < size; i++) {
+void parseFile(const char* filemem, size_t size) {
+    int value;
+    counter = 1;
+    State state = Normal;
+
+    for(size_t i = 0; i < size; i++){
         char c = filemem[i];
 
-        if(c == '\n')
-            counter++;
+        switch(state) {
+            case Normal:
+                if(c == '\n'){
+                    counter++;
+                } else if(c == '\"'){
+                    state = StringContent;
+                } else if(c != ' ' && c != '\t'){
+                    cerr << "Error at line " << counter << "\n";
+                    return;
+                }
+                break;
+                
+            case StringContent:
+                if(c == '\\'){
+                    state = Escape;
+                } else if(c == '\"'){
+                    //calculates num
+                    state = Normal;
+                    i++;
+                    while(i < size && (filemem[i] == ' ' || filemem[i] == '\t'))
+                        i++;
+                    value = 0;
+                    if(i >= size || !(filemem[i] >= '0' && filemem[i] <= '9')){
+                        cerr << "Error at line " << counter << "\n";
+                        return;
+                    }
+                    while(i < size && filemem[i] >= '0' && filemem[i] <= '9'){
+                        value = value * 10 + (filemem[i] - '0');
+                        i++;
+                    }
+                    trie.insert(value);
+                    i--;
+                } else {
+                    trie.insert(c);
+                }
+                break;
 
-        if(!strstart){
-            if(c == '\"'){
-                strstart = true;
-                bslash = false;
-            } else if(c != ' ' && c != '\t' && c != '\n'){
-                cerr << "Error at line " << counter << "\n";
-                return;
-            }
-        } else {
-            if(bslash){
-                if(c != '\\' && c != '"'){
+            case Escape:
+                if(c != '\\' && c != '\"'){
                     cerr << "Error at line " << counter << "\n";
                     return;
                 }
                 trie.insert(c);
-                bslash = false;
-            } else if(c == '\\'){
-                bslash = true; 
-            } else if(c == '\"'){
-                strstart = false;
-                i++;
+                state = StringContent;
+                break;
 
-                while(i < size && (filemem[i] == ' ' || filemem[i] == '\t'))
-                    i++;
-
-                value = 0;
-                if(i >= size || !(filemem[i] >= '0' && filemem[i] <= '9')){
-                    cerr << "Error at line " << counter << "\n";
-                    return;
-                }
-                while(i < size && filemem[i] >= '0' && filemem[i] <= '9'){
-                    value = value * 10 + (filemem[i] - '0');
-                    i++;
-                }
-                trie.insert(value);
-                i--;
-            } else {
-                trie.insert(c);
-            }
+            default:
+                break;
         }
     }
 }
